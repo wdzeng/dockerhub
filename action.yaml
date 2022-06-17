@@ -33,7 +33,7 @@ runs:
       id: version
       uses: wdzeng/version@v1
       with:
-        pure: true
+        prefix: ''
     - name: Determine image names
       id: tags
       env:
