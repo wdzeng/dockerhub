@@ -6,7 +6,7 @@ Three tags are pushed: `X.X.X`, `X.X` and `X`. Tag `latest` is optional.
 
 ## Prerequisites
 
-- Dockerfile is placed at repository root.
+- Dockerfile is placed at repository root location.
 
 ## Usage
 
@@ -28,7 +28,7 @@ jobs:
         run: pnpm build
       - uses: wdzeng/image@v1
         with:
-          dockerhub-username: hyperbola
+          dockerhub-username: your-dockerhub-username
           dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
 ```
 
