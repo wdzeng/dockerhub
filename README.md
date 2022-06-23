@@ -1,6 +1,6 @@
-# Dockerhub Action
+# Image Action
 
-A GitHub action to build project and push image onto dockerhub.
+A GitHub action to build project and push image onto dockerhub and ghcr.
 
 Three tags are pushed: `X.X.X`, `X.X` and `X`. Tag `latest` is optional.
 
@@ -26,7 +26,7 @@ jobs:
           run_install: true
       - name: Build project
         run: pnpm build
-      - uses: wdzeng/dockerhub@v1
+      - uses: wdzeng/image@v1
         with:
           dockerhub-username: hyperbola
           dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
