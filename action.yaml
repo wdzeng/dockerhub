@@ -3,10 +3,10 @@ description: Build image and push to dockerhub
 author: hyperbola
 
 inputs:
-  username:
+  dockerhub-username:
     description: dockerhub username
     required: false
-  password:
+  dockerhub-password:
     description: dockerhub API token
     required: true
   image:
@@ -16,6 +16,9 @@ inputs:
     description: push latest image
     required: false
     default: 'false'
+  github-token:
+    description: github token used to push image to ghcr
+    required: false
 
 runs:
   using: composite
@@ -25,15 +28,15 @@ runs:
       uses: wdzeng/version@v1
       with:
         prefix: ''
-    - name: Determine image names
-      id: tags
+    - name: Determine Dockerhub image names
+      id: dockerhub-tags
       env:
         VER: ${{ steps.version.outputs.version }}
         VER_MIN: ${{ steps.version.outputs.minor }}
         VER_MAJ: ${{ steps.version.outputs.major }}
       shell: bash -e {0}
       run: |
-        USR="${{ inputs.username }}"
+        USR="${{ inputs.dockerhub-username }}"
         USR="${USR:-${{ github.repository_owner }}}"
         echo ::debug::username=$USR
 
@@ -45,6 +48,27 @@ runs:
         TAGS="$USR/$IMG:$VER,$USR/$IMG:$VER_MIN,$USR/$IMG:$VER_MAJ"
         if [[ '${{ inputs.latest }}' == 'true' ]]; then TAGS="$TAGS,$USR/$IMG:latest"; fi
         echo ::set-output name=tags::$TAGS
+    - name: Determine ghcr image names
+      id: ghcr-tags
+      env:
+        VER: ${{ steps.version.outputs.version }}
+        VER_MIN: ${{ steps.version.outputs.minor }}
+        VER_MAJ: ${{ steps.version.outputs.major }}
+      shell: bash -e {0}
+      run: |
+        USR="${{ github.repository_owner }}"
+        echo ::debug::username=$USR
+
+        IMG="${{ inputs.image }}"
+        REPO_NAME=${{ github.repository }}
+        IMG="${IMG:-${REPO_NAME#*/}}"
+        echo ::debug::image=$IMG
+
+        DOM='ghcr.io'
+        
+        TAGS="$DOM/$USR/$IMG:$VER,$DOM/$USR/$IMG:$VER_MIN,$DOM/$USR/$IMG:$VER_MAJ"
+        if [[ '${{ inputs.latest }}' == 'true' ]]; then TAGS="$TAGS,$DOM/$USR/$IMG:latest"; fi
+        echo ::set-output name=tags::$TAGS
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
@@ -52,11 +76,17 @@ runs:
     - name: Login to DockerHub
       uses: docker/login-action@v2
       with:
-        username: ${{ inputs.username }}
-        password: ${{ inputs.password }}
+        username: ${{ inputs.dockerhub-username }}
+        password: ${{ inputs.dockerhub-password }}
+    - name: Login to ghcr
+      uses: docker/login-action@v2
+      with:
+        registry: ghcr.io
+        username: ${{ github.repository_owner }}
+        password: ${{ inputs.github-token || github.token }}
     - name: Build image and push
       uses: docker/build-push-action@v3
       with:
         context: .
         push: true
-        tags: ${{ steps.tags.outputs.tags }}
+        tags: ${{ steps.dockerhub-tags.outputs.tags }},${{ steps.ghcr-tags.outputs.tags }}

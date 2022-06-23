@@ -28,12 +28,18 @@ jobs:
         run: pnpm build
       - uses: wdzeng/dockerhub@v1
         with:
-          username: hyperbola
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          dockerhub-username: hyperbola
+          dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
 ```
 
 ## Inputs
 
-- `username`: dockerhub username; default to github username
+Unless otherwise noted with a default value, each input is required.
+
+- `github-token`: token used to push image onto ghcr; required only if the repository has no write permission to ghcr.
+- `dockerhub-username`: dockerhub username; default to github username
+- `dockerhub-password`: dockerhub token
 - `image`: image name; default to repository name
 - `latest`: whether image with tag `latest` should be pushed; default to false
+
+You may need to set `github-token` for the first time the image is pushed to ghcr since it is tricky to give write permission to the repository.
