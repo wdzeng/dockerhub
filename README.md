@@ -6,11 +6,11 @@ Three tags are pushed: `X.X.X`, `X.X` and `X`. Tag `latest` is optional.
 
 ## Prerequisites
 
-- Package manager must be pnpm, which required version is written in package.json.
-- Command to build the repository is `pnpm build`.
 - Dockerfile is placed at repository root.
 
 ## Usage
+
+Following example shows how to build project with pnpm and publish images to dockerhub.
 
 ```yml
 jobs:
@@ -18,6 +18,14 @@ jobs:
     name: Build project and push image onto dockerhub
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+      - name: Install pnpm and dependencies
+        uses: pnpm/action-setup@v2.2.2
+        with:
+          run_install: true
+      - name: Build project
+        run: pnpm build
       - uses: wdzeng/dockerhub@v1
         with:
           username: hyperbola
