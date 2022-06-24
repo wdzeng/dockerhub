@@ -1,6 +1,6 @@
 # Image Action
 
-A GitHub action to build project and push image onto dockerhub and ghcr.
+A GitHub action to build and push image to [Docker Hub](https://hub.docker.com) and [GitHub Container Registry (ghcr)](https://ghcr.io).
 
 Three tags are pushed: `X.X.X`, `X.X` and `X`. Tag `latest` is optional.
 
@@ -10,7 +10,7 @@ Three tags are pushed: `X.X.X`, `X.X` and `X`. Tag `latest` is optional.
 
 ## Usage
 
-Following example shows how to build project with pnpm and publish images to dockerhub.
+Following example shows how to build project and build and push images to Docker Hub and GitHub Container Registry.
 
 ```yml
 jobs:
@@ -20,12 +20,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-      - name: Install pnpm and dependencies
-        uses: pnpm/action-setup@v2.2.2
-        with:
-          run_install: true
       - name: Build project
-        run: pnpm build
+        run: yarn install --frozen-lockfile && yarn build
       - uses: wdzeng/image@v1
         with:
           dockerhub-username: your-dockerhub-username
@@ -40,6 +36,6 @@ Unless otherwise noted with a default value, each input is required.
 - `dockerhub-username`: dockerhub username; default to github username
 - `dockerhub-password`: dockerhub token
 - `image`: image name; default to repository name
-- `latest`: whether image with tag `latest` should be pushed; default to false
+- `latest`: whether image with tag `latest` should be pushed; default to `false`
 
 You may need to set `github-token` for the first time the image is pushed to ghcr since it is tricky to give write permission to the repository.
