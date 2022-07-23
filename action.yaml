@@ -44,7 +44,7 @@ runs:
         REPO_NAME=${{ github.repository }}
         IMG="${IMG:-${REPO_NAME#*/}}"
         echo ::debug::image=$IMG
-        
+
         TAGS="$USR/$IMG:$VER,$USR/$IMG:$VER_MIN,$USR/$IMG:$VER_MAJ"
         if [[ '${{ inputs.latest }}' == 'true' ]]; then TAGS="$TAGS,$USR/$IMG:latest"; fi
         echo ::set-output name=tags::$TAGS
@@ -65,7 +65,7 @@ runs:
         echo ::debug::image=$IMG
 
         DOM='ghcr.io'
-        
+
         TAGS="$DOM/$USR/$IMG:$VER,$DOM/$USR/$IMG:$VER_MIN,$DOM/$USR/$IMG:$VER_MAJ"
         if [[ '${{ inputs.latest }}' == 'true' ]]; then TAGS="$TAGS,$DOM/$USR/$IMG:latest"; fi
         echo ::set-output name=tags::$TAGS
