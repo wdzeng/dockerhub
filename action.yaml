@@ -1,5 +1,5 @@
-name: dockerhub
-description: Build image and push to dockerhub
+name: image
+description: Build image and push to Docker Hub and GitHib Container Registry
 author: hyperbola
 
 inputs:
@@ -13,7 +13,7 @@ inputs:
     description: name of image
     required: false
   latest:
-    description: push latest image
+    description: push image with tag `latest`
     required: false
     default: 'false'
   github-token:
