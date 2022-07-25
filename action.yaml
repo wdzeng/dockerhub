@@ -35,6 +35,10 @@ inputs:
     description: platform list to build image
     required: false
     default: linux/amd64,linux/arm64
+  tag-format:
+    description: tag names of images; use '$VERSION' to substitute semver
+    required: false
+    default: '$VERSION'
   build-target:
     description: target stage to build
     required: false
@@ -47,35 +51,64 @@ runs:
       uses: wdzeng/version@v1
       with:
         prefix: ''
+    - name: Determine image tag names
+      id: tag
+      shell: bash -e {0}
+      run: |
+        VERSION="${{ steps.version.outputs.version }}"
+        echo ::set-output name=tag::${{ inputs.tag-format }}
+
+        VERSION="${{ steps.version.outputs.minor }}"
+        echo ::set-output name=tag-minor::${{ inputs.tag-format }}
+
+        VERSION="${{ steps.version.outputs.major }}"
+        echo ::set-output name=tag-major::${{ inputs.tag-format }}
+
+        if [[ '${{ inputs.latest }}' == 'true' ]]; then
+          VERSION=''
+          TAG_LATEST="${{ inputs.tag-format }}"
+          TAG_LATEST="${TAG_LATEST:-latest}"
+        else
+          TAG_LATEST=''
+        fi
+        echo ::set-output name=tag-latest::"$TAG_LATEST"
     - name: Determine Dockerhub image names
       id: dockerhub-tags
       if: ${{ inputs.dockerhub == 'true' }}
       shell: bash -e {0}
       run: |
+        # Determine username
         USR="${{ inputs.dockerhub-username }}"
         USR="${USR:-${{ github.repository_owner }}}"
         echo ::debug::username=$USR
 
+        # Determine image name
         IMG="${{ inputs.image }}"
         REPO_NAME=${{ github.repository }}
         IMG="${IMG:-${REPO_NAME#*/}}"
         echo ::debug::image=$IMG
 
-        TAGS="$USR/$IMG:$VER,$USR/$IMG:$VER_MIN,$USR/$IMG:$VER_MAJ"
-        if [[ '${{ inputs.latest }}' == 'true' ]]; then TAGS="$TAGS,$USR/$IMG:latest"; fi
+        # Determine tag names
+        TAGS="$USR/$IMG:${{ steps.tag.outputs.tag }}"
+        TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-minor }}"
+        TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-major }}"
+
+        # Add latest tag if needed
+        if [[ -n '${{ steps.tag.outputs.tag-latest }}' ]]; then
+          TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-latest }}"
+        fi
+
         echo ::set-output name=tags::$TAGS
     - name: Determine ghcr image names
       if: ${{ inputs.ghcr == 'true' }}
       id: ghcr-tags
-      env:
-        VER: ${{ steps.version.outputs.version }}
-        VER_MIN: ${{ steps.version.outputs.minor }}
-        VER_MAJ: ${{ steps.version.outputs.major }}
       shell: bash -e {0}
       run: |
+        # Determine username
         USR="${{ github.repository_owner }}"
         echo ::debug::username=$USR
 
+        # Determine image name
         IMG="${{ inputs.image }}"
         REPO_NAME=${{ github.repository }}
         IMG="${IMG:-${REPO_NAME#*/}}"
@@ -83,9 +116,31 @@ runs:
 
         DOM='ghcr.io'
 
-        TAGS="$DOM/$USR/$IMG:$VER,$DOM/$USR/$IMG:$VER_MIN,$DOM/$USR/$IMG:$VER_MAJ"
-        if [[ '${{ inputs.latest }}' == 'true' ]]; then TAGS="$TAGS,$DOM/$USR/$IMG:latest"; fi
+        # Determine tag names
+        TAGS="$DOM/$USR/$IMG:${{ steps.tag.outputs.tag }}"
+        TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-minor }}"
+        TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-major }}"
+
+        # Add latest tag if needed
+        if [[ -n '${{ steps.tag.outputs.tag-latest }}' ]]; then
+          TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-latest }}"
+        fi
+
         echo ::set-output name=tags::$TAGS
+    - name: Determine all image tags
+      id: all-tag
+      shell: bash -e {0}
+      run: |
+        if [[ -n "${{ inputs.dockerhub }}" && -n "${{ inputs.ghcr }}" ]]; then
+          echo ::set-output name=tags::${{ steps.dockerhub-tags.outputs.tags }},${{ steps.ghcr-tags.outputs.tags }}
+        elif [[ -n "${{ inputs.dockerhub }}" ]]; then
+          echo ::set-output name=tags::${{ steps.dockerhub-tags.outputs.tags }}
+        elif [[ -n "${{ inputs.ghcr }}" ]]; then
+          echo ::set-output name=tags::${{ steps.ghcr-tags.outputs.tags }}
+        else:
+          echo ::error::where do you want to push images?
+          exit 1
+        fi
     - name: Set up QEMU
       if: ${{ inputs.init == 'true' }}
       uses: docker/setup-qemu-action@v2
@@ -117,6 +172,7 @@ runs:
         context: .
         push: true
         platforms: ${{ inputs.platforms }}
+        tags: ${{ steps.all-tag.outputs.tags }}
         target: ${{ inputs.build-target }}
         labels: |
           org.opencontainers.image.title="${{ github.event.repository.name }}"
