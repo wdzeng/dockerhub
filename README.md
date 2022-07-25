@@ -37,5 +37,6 @@ Unless otherwise noted with a default value, each input is required.
 - `dockerhub-password`: dockerhub token
 - `image`: image name; default to repository name
 - `latest`: whether image with tag `latest` should be pushed; default to `false`
+- `platforms`: platforms to build images; default to `linux/amd64,linux/arm64,linux/arm/v7`
 
 You may need to set `github-token` for the first time the image is pushed to ghcr since it is tricky to give write permission to the repository.
