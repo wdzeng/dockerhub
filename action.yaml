@@ -24,10 +24,6 @@ inputs:
   image:
     description: name of image
     required: false
-  latest:
-    description: push image with tag `latest`
-    required: false
-    default: 'false'
   github-token:
     description: github token used to push image to ghcr
     required: false
@@ -64,13 +60,9 @@ runs:
         VERSION="${{ steps.version.outputs.major }}"
         echo ::set-output name=tag-major::${{ inputs.tag-format }}
 
-        if [[ '${{ inputs.latest }}' == 'true' ]]; then
-          VERSION=''
-          TAG_LATEST="${{ inputs.tag-format }}"
-          TAG_LATEST="${TAG_LATEST:-latest}"
-        else
-          TAG_LATEST=''
-        fi
+        VERSION=''
+        TAG_LATEST="${{ inputs.tag-format }}"
+        TAG_LATEST="${TAG_LATEST:-latest}"
         echo ::set-output name=tag-latest::"$TAG_LATEST"
     - name: Determine Dockerhub image names
       id: dockerhub-tags
@@ -92,11 +84,7 @@ runs:
         TAGS="$USR/$IMG:${{ steps.tag.outputs.tag }}"
         TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-minor }}"
         TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-major }}"
-
-        # Add latest tag if needed
-        if [[ -n '${{ steps.tag.outputs.tag-latest }}' ]]; then
-          TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-latest }}"
-        fi
+        TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-latest }}"
 
         echo ::set-output name=tags::$TAGS
     - name: Determine ghcr image names
@@ -120,11 +108,7 @@ runs:
         TAGS="$DOM/$USR/$IMG:${{ steps.tag.outputs.tag }}"
         TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-minor }}"
         TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-major }}"
-
-        # Add latest tag if needed
-        if [[ -n '${{ steps.tag.outputs.tag-latest }}' ]]; then
-          TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-latest }}"
-        fi
+        TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-latest }}"
 
         echo ::set-output name=tags::$TAGS
     - name: Determine all image tags
