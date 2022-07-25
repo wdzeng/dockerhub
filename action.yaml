@@ -35,6 +35,10 @@ inputs:
     description: tag names of images; use '$VERSION' to substitute semver
     required: false
     default: '$VERSION'
+  tag-latest:
+    description: tag name used for latest tag name
+    required: false
+    default: latest
   build-target:
     description: target stage to build
     required: false
@@ -60,10 +64,7 @@ runs:
         VERSION="${{ steps.version.outputs.major }}"
         echo ::set-output name=tag-major::${{ inputs.tag-format }}
 
-        VERSION=''
-        TAG_LATEST="${{ inputs.tag-format }}"
-        TAG_LATEST="${TAG_LATEST:-latest}"
-        echo ::set-output name=tag-latest::"$TAG_LATEST"
+        echo ::set-output name=tag-latest::${{ inputs.tag-latest }}
     - name: Determine Dockerhub image names
       id: dockerhub-tags
       if: ${{ inputs.dockerhub == 'true' }}
