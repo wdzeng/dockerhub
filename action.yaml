@@ -103,6 +103,7 @@ runs:
         echo ::debug::image=$IMG
 
         DOM='ghcr.io'
+        echo ::set-output name=image::$DOM/$USR/$IMG
 
         # Determine tag names
         TAGS="$DOM/$USR/$IMG:${{ steps.tag.outputs.tag }}"
@@ -158,6 +159,8 @@ runs:
         platforms: ${{ inputs.platforms }}
         tags: ${{ steps.all-tag.outputs.tags }}
         target: ${{ inputs.build-target }}
+        cache-from: ${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.tag-latest }}
+        cache-to: type=inline
         labels: |
           org.opencontainers.image.title="${{ github.event.repository.name }}"
           org.opencontainers.image.version="${{ steps.version.outputs.version }}"
