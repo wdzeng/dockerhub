@@ -41,7 +41,7 @@ Unless otherwise noted with a default value, each input is required.
 - `dockerhub`: whether to push image to Docker Hub; default to true
 - `ghcr`: whether to push image to ghcr.io; default to true
 - `init`: whether to setup QEMU and buildx; set to false if this is not the first time the action is used; default to true
-- `platforms`: platforms to build images; default to `linux/amd64,linux/arm64`
+- `platforms`: platforms to build images; default to `linux/amd64,linux/arm64,linux/arm/v7`
 - `build-target`: build target; optional
 
 You may need to set `github-token` for the first time the image is pushed to ghcr since it is tricky to give write permission to the repository.

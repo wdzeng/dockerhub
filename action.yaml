@@ -30,7 +30,7 @@ inputs:
   platforms:
     description: platform list to build image
     required: false
-    default: linux/amd64,linux/arm64
+    default: linux/amd64,linux/arm64,linux/arm/v7
   tag-format:
     description: tag names of images; use '$VERSION' to substitute semver
     required: false
