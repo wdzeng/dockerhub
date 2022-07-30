@@ -37,6 +37,9 @@ inputs:
   build-target:
     description: target stage to build docker image
     required: false
+  build-args:
+    description: docker image build arguments
+    required: false
   repo_description:
     description: repository description
     required: true
@@ -176,6 +179,7 @@ runs:
           ${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.tag-latest }}
           ${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.tag-edge }}
         cache-to: type=inline
+        build-args: ${{ inputs.build-args }}
         labels: |
           org.opencontainers.image.title="${{ github.event.repository.name }}"
           org.opencontainers.image.version="${{ steps.version.outputs.version }}"
