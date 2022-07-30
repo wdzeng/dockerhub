@@ -36,10 +36,10 @@ inputs:
   build-args:
     description: docker image build arguments
     required: false
-  repo_description:
+  repo-description:
     description: repository description
     required: true
-  repo_license:
+  repo-license:
     description: repository license
     required: true
 
@@ -178,5 +178,5 @@ runs:
           org.opencontainers.image.created="${{ steps.date.outputs.now }}"
           org.opencontainers.image.documentation="https://github.com/${{ github.repository }}/blob/master/README.md"
           org.opencontainers.image.revision="${{ github.sha }}"
-          org.opencontainers.image.description="${{ inputs.repo_description }}"
-          org.opencontainers.image.licenses=${{ inputs.repo_license }}
+          org.opencontainers.image.description="${{ inputs.repo-description }}"
+          org.opencontainers.image.licenses=${{ inputs.repo-license }}
