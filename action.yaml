@@ -68,7 +68,7 @@ runs:
 
         # For pre-releases, set tag to raw version only; otherwise patch, minor and major versions.
         if [[ "${{ steps.version.outputs.pre-release }}" == 'true' ]]; then
-          echo ::set-output name=tag::${VARIANT_PREFIX}${{ steps.version.outputs.version }}
+          echo ::set-output name=tag::${VARIANT_PREFIX}${{ steps.version.outputs.version }} $EDGE_TAG
         else
           echo ::set-output name=tag::${VARIANT_PREFIX}${{ steps.version.outputs.patch }} ${VARIANT_PREFIX}${{ steps.version.outputs.minor }} ${VARIANT_PREFIX}${{ steps.version.outputs.major }} $LATEST_TAG
         fi
