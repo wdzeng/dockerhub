@@ -65,6 +65,7 @@ runs:
           LATEST_TAG="${{ inputs.variant }}"
           EDGE_TAG="${{ inputs.variant }}-edge"
         fi
+        echo ::set-output name=variant-prefix::$VARIANT_PREFIX
 
         # For pre-releases, set tag to raw version only; otherwise patch, minor and major versions.
         if [[ "${{ steps.version.outputs.pre-release }}" == 'true' ]]; then
@@ -165,10 +166,8 @@ runs:
         platforms: ${{ inputs.platforms }}
         tags: ${{ steps.all-tag.outputs.tags }}
         target: ${{ inputs.build-target }}
-        cache-from: |
-          ${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.tag-latest }}
-          ${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.tag-edge }}
-        cache-to: type=inline
+        cache-from: type=registry,ref=${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.variant-prefix }}cache
+        cache-to: type=registry,ref=${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.variant-prefix }}cache
         build-args: ${{ inputs.build-args }}
         labels: |
           org.opencontainers.image.title="${{ github.event.repository.name }}"
