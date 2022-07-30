@@ -37,6 +37,12 @@ inputs:
   build-target:
     description: target stage to build docker image
     required: false
+  repo_description:
+    description: repository description
+    required: true
+  repo_license:
+    description: repository license
+    required: true
 
 runs:
   using: composite
@@ -179,3 +185,5 @@ runs:
           org.opencontainers.image.created="${{ steps.date.outputs.now }}"
           org.opencontainers.image.documentation="https://github.com/${{ github.repository }}/blob/master/README.md"
           org.opencontainers.image.revision="${{ github.sha }}"
+          org.opencontainers.image.description="${{ inputs.repo_description }}"
+          org.opencontainers.image.licenses=${{ inputs.repo_license }}
