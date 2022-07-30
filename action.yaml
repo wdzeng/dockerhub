@@ -31,14 +31,9 @@ inputs:
     description: platform list to build image
     required: false
     default: linux/amd64,linux/arm64,linux/arm/v7
-  tag-format:
-    description: tag names of images; use '$VERSION' to substitute semver
+  variant:
+    description: docker image variant
     required: false
-    default: '$VERSION'
-  tag-latest:
-    description: tag name used for latest tag name
-    required: false
-    default: latest
   build-target:
     description: target stage to build docker image
     required: false
@@ -55,16 +50,25 @@ runs:
       id: tag
       shell: bash -e {0}
       run: |
-        VERSION="${{ steps.version.outputs.version }}"
-        echo ::set-output name=tag::${{ inputs.tag-format }}
+        # If variant is set then append a suffix dash.
+        if [[ -z "${{ inputs.variant }}" ]]; then
+          VARIANT_PREFIX=''
+          LATEST_TAG="latest"
+          EDGE_TAG="edge"
+        else
+          VARIANT_PREFIX="${{ inputs.variant }}-"
+          LATEST_TAG="${{ inputs.variant }}"
+          EDGE_TAG="${{ inputs.variant }}-edge"
+        fi
 
-        VERSION="${{ steps.version.outputs.minor }}"
-        echo ::set-output name=tag-minor::${{ inputs.tag-format }}
-
-        VERSION="${{ steps.version.outputs.major }}"
-        echo ::set-output name=tag-major::${{ inputs.tag-format }}
-
-        echo ::set-output name=tag-latest::${{ inputs.tag-latest }}
+        # For pre-releases, set tag to raw version only; otherwise patch, minor and major versions.
+        if [[ "${{ steps.version.outputs.pre-release }}" == 'true' ]]; then
+          echo ::set-output name=tag::$VARIANT_PREFIX${{ steps.version.outputs.version }}
+        else
+          echo ::set-output name=tag::$VARIANT_PREFIX${{ steps.version.outputs.patch }} $VARIANT_PREFIX${{ steps.version.outputs.minor }} $VARIANT_PREFIX${{ steps.version.outputs.major }} $LATEST_TAG
+        fi
+        echo ::set-output name=tag-latest::$LATEST_TAG
+        echo ::set-output name=tag-edge::$EDGE_TAG
     - name: Determine Dockerhub image names
       id: dockerhub-tags
       if: ${{ inputs.dockerhub == 'true' }}
@@ -82,10 +86,11 @@ runs:
         echo ::debug::image=$IMG
 
         # Determine tag names
-        TAGS="$USR/$IMG:${{ steps.tag.outputs.tag }}"
-        TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-minor }}"
-        TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-major }}"
-        TAGS="$TAGS,$USR/$IMG:${{ steps.tag.outputs.tag-latest }}"
+        TAGS=''
+        for tag in ${{ steps.tag.outputs.tag }}; do
+          TAGS="$TAGS,$USR/$IMG:$tag"
+        done
+        TAGS=${TAGS:1} # remove prefix comma
 
         echo ::set-output name=tags::$TAGS
     - name: Determine ghcr image names
@@ -107,10 +112,11 @@ runs:
         echo ::set-output name=image::$DOM/$USR/$IMG
 
         # Determine tag names
-        TAGS="$DOM/$USR/$IMG:${{ steps.tag.outputs.tag }}"
-        TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-minor }}"
-        TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-major }}"
-        TAGS="$TAGS,$DOM/$USR/$IMG:${{ steps.tag.outputs.tag-latest }}"
+        TAGS=''
+        for tag in ${{ steps.tag.outputs.tag }}; do
+          TAGS="$TAGS,$DOM/$USR/$IMG:$tag"
+        done
+        TAGS=${TAGS:1} # remove prefix comma
 
         echo ::set-output name=tags::$TAGS
     - name: Determine all image tags
@@ -160,7 +166,9 @@ runs:
         platforms: ${{ inputs.platforms }}
         tags: ${{ steps.all-tag.outputs.tags }}
         target: ${{ inputs.build-target }}
-        cache-from: ${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.tag-latest }}
+        cache-from: |
+          ${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.tag-latest }}
+          ${{ steps.ghcr-tags.outputs.image }}:${{ steps.tag.outputs.tag-edge }}
         cache-to: type=inline
         labels: |
           org.opencontainers.image.title="${{ github.event.repository.name }}"
