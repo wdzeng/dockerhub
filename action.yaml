@@ -11,10 +11,6 @@ inputs:
     description: push image to dockerhub
     required: false
     default: 'true'
-  ghcr:
-    description: push image to ghcr.io
-    required: false
-    default: 'true'
   dockerhub-username:
     description: dockerhub username
     required: false
@@ -103,7 +99,6 @@ runs:
 
         echo ::set-output name=tags::$TAGS
     - name: Determine ghcr image names
-      if: ${{ inputs.ghcr == 'true' }}
       id: ghcr-tags
       shell: bash -e {0}
       run: |
@@ -132,15 +127,10 @@ runs:
       id: all-tag
       shell: bash -e {0}
       run: |
-        if [[ -n "${{ inputs.dockerhub }}" && -n "${{ inputs.ghcr }}" ]]; then
+        if [[ -n "${{ inputs.dockerhub }}" ]]; then
           echo ::set-output name=tags::${{ steps.dockerhub-tags.outputs.tags }},${{ steps.ghcr-tags.outputs.tags }}
-        elif [[ -n "${{ inputs.dockerhub }}" ]]; then
-          echo ::set-output name=tags::${{ steps.dockerhub-tags.outputs.tags }}
-        elif [[ -n "${{ inputs.ghcr }}" ]]; then
+        else
           echo ::set-output name=tags::${{ steps.ghcr-tags.outputs.tags }}
-        else:
-          echo ::error::where do you want to push images?
-          exit 1
         fi
     - name: Set up QEMU
       if: ${{ inputs.init == 'true' }}
@@ -155,7 +145,7 @@ runs:
         username: ${{ inputs.dockerhub-username }}
         password: ${{ inputs.dockerhub-password }}
     - name: Login to ghcr
-      if: ${{ inputs.ghcr == 'true' && inputs.init == 'true' }}
+      if: ${{ inputs.init == 'true' }}
       uses: docker/login-action@v2
       with:
         registry: ghcr.io
