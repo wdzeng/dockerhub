@@ -4,7 +4,7 @@ author: hyperbola
 
 inputs:
   init:
-    description: Setup QEMU, buildx and logins
+    description: whether to setup QEMU, buildx and logins
     required: false
     default: 'true'
   dockerhub:
@@ -40,7 +40,7 @@ inputs:
     required: false
     default: latest
   build-target:
-    description: target stage to build
+    description: target stage to build docker image
     required: false
 
 runs:
