@@ -58,8 +58,8 @@ runs:
         # If variant is set then append a suffix dash.
         if [[ -z "${{ inputs.variant }}" ]]; then
           VARIANT_PREFIX=''
-          LATEST_TAG="latest"
-          EDGE_TAG="edge"
+          LATEST_TAG=latest
+          EDGE_TAG=edge
         else
           VARIANT_PREFIX="${{ inputs.variant }}-"
           LATEST_TAG="${{ inputs.variant }}"
