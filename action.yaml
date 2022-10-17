@@ -65,16 +65,16 @@ runs:
           LATEST_TAG="${{ inputs.variant }}"
           EDGE_TAG="${{ inputs.variant }}-edge"
         fi
-        echo ::set-output name=variant-prefix::$VARIANT_PREFIX
+        echo variant-prefix=$VARIANT_PREFIX >> $GITHUB_OUTPUT
 
         # For pre-releases, set tag to raw version only; otherwise patch, minor and major versions.
         if [[ "${{ steps.version.outputs.pre-release }}" == 'true' ]]; then
-          echo ::set-output name=tag::${VARIANT_PREFIX}${{ steps.version.outputs.version }} $EDGE_TAG
+          echo tag=${VARIANT_PREFIX}${{ steps.version.outputs.version }} $EDGE_TAG >> $GITHUB_OUTPUT
         else
-          echo ::set-output name=tag::${VARIANT_PREFIX}${{ steps.version.outputs.patch }} ${VARIANT_PREFIX}${{ steps.version.outputs.minor }} ${VARIANT_PREFIX}${{ steps.version.outputs.major }} $LATEST_TAG
+          echo tag=${VARIANT_PREFIX}${{ steps.version.outputs.patch }} ${VARIANT_PREFIX}${{ steps.version.outputs.minor }} ${VARIANT_PREFIX}${{ steps.version.outputs.major }} $LATEST_TAG >> $GITHUB_OUTPUT
         fi
-        echo ::set-output name=tag-latest::$LATEST_TAG
-        echo ::set-output name=tag-edge::$EDGE_TAG
+        echo tag-latest=$LATEST_TAG >> $GITHUB_OUTPUT
+        echo tag-edge=$EDGE_TAG >> $GITHUB_OUTPUT
     - name: Determine Dockerhub image names
       id: dockerhub-tags
       if: ${{ inputs.dockerhub == 'true' }}
@@ -98,7 +98,7 @@ runs:
         done
         TAGS=${TAGS:1} # remove prefix comma
 
-        echo ::set-output name=tags::$TAGS
+        echo tags=$TAGS >> $GITHUB_OUTPUT
     - name: Determine ghcr image names
       id: ghcr-tags
       shell: bash -e {0}
@@ -114,7 +114,7 @@ runs:
         echo ::debug::image=$IMG
 
         DOM='ghcr.io'
-        echo ::set-output name=image::$DOM/$USR/$IMG
+        echo image=$DOM/$USR/$IMG >> $GITHUB_OUTPUT
 
         # Determine tag names
         TAGS=''
@@ -123,15 +123,15 @@ runs:
         done
         TAGS=${TAGS:1} # remove prefix comma
 
-        echo ::set-output name=tags::$TAGS
+        echo tags=$TAGS >> $GITHUB_OUTPUT
     - name: Determine all image tags
       id: all-tag
       shell: bash -e {0}
       run: |
         if [[ -n "${{ inputs.dockerhub }}" ]]; then
-          echo ::set-output name=tags::${{ steps.dockerhub-tags.outputs.tags }},${{ steps.ghcr-tags.outputs.tags }}
+          echo tags=${{ steps.dockerhub-tags.outputs.tags }},${{ steps.ghcr-tags.outputs.tags }} >> $GITHUB_OUTPUT
         else
-          echo ::set-output name=tags::${{ steps.ghcr-tags.outputs.tags }}
+          echo tags=${{ steps.ghcr-tags.outputs.tags }} >> $GITHUB_OUTPUT
         fi
     - name: Set up QEMU
       if: ${{ inputs.init == 'true' }}
@@ -157,7 +157,7 @@ runs:
       shell: bash -e {0}
       run: |
         now=$(TZ=Asia/Taipei date -Is)
-        echo ::set-output name=now::$now
+        echo now=$now >> $GITHUB_OUTPUT
     - name: Build image and push
       uses: docker/build-push-action@v3
       with:
