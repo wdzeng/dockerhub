@@ -3,10 +3,6 @@ description: Build image and push to Docker Hub and GitHib Container Registry
 author: hyperbola
 
 inputs:
-  init:
-    description: whether to setup QEMU, buildx and logins
-    required: false
-    default: 'true'
   dockerhub:
     description: push image to dockerhub
     required: false
@@ -36,12 +32,6 @@ inputs:
   build-args:
     description: docker image build arguments
     required: false
-  repo-description:
-    description: repository description
-    required: true
-  repo-license:
-    description: repository license
-    required: true
 
 runs:
   using: composite
@@ -133,20 +123,33 @@ runs:
         else
           echo tags=${{ steps.ghcr-tags.outputs.tags }} >> $GITHUB_OUTPUT
         fi
+    - name: Check if this is init
+      id: init
+      shell: base -e {0}
+      run: |
+        if [[ -n "$action_wdzeng_image_init" ]]; then
+          echo init=true >> $GITHUB_OUTPUT
+        else
+          echo init=false >> $GITHUB_OUTPUT
+        fi
+    - name: Set init environment variable
+      shell: bash -e {0}
+      run: |
+        echo 'action_wdzeng_image_init=1' >> $GITHUB_ENV
     - name: Set up QEMU
-      if: ${{ inputs.init == 'true' }}
+      if: ${{ steps.init.outputs.init == 'true' }}
       uses: docker/setup-qemu-action@v2
     - name: Set up Docker Buildx
-      if: ${{ inputs.init == 'true' }}
+      if: ${{ steps.init.outputs.init == 'true' }}
       uses: docker/setup-buildx-action@v2
     - name: Login to DockerHub
-      if: ${{ inputs.dockerhub == 'true' && inputs.init == 'true' }}
+      if: ${{ inputs.dockerhub == 'true' }}
       uses: docker/login-action@v2
       with:
         username: ${{ inputs.dockerhub-username }}
         password: ${{ inputs.dockerhub-password }}
     - name: Login to ghcr
-      if: ${{ inputs.init == 'true' }}
+      if: ${{ steps.init.outputs.init == 'true' }}
       uses: docker/login-action@v2
       with:
         registry: ghcr.io
@@ -172,11 +175,10 @@ runs:
         labels: |
           org.opencontainers.image.title="${{ github.event.repository.name }}"
           org.opencontainers.image.version="${{ steps.version.outputs.version }}"
-          org.opencontainers.image.authors="hyperbola <me@hyperbola.me>"
+          org.opencontainers.image.authors="${{ steps.version.outputs.author }}"
           org.opencontainers.image.url="https://github.com/${{ github.repository }}"
           org.opencontainers.image.source="https://github.com/${{ github.repository }}"
           org.opencontainers.image.created="${{ steps.date.outputs.now }}"
-          org.opencontainers.image.documentation="https://github.com/${{ github.repository }}/blob/master/README.md"
           org.opencontainers.image.revision="${{ github.sha }}"
-          org.opencontainers.image.description="${{ inputs.repo-description }}"
-          org.opencontainers.image.licenses=${{ inputs.repo-license }}
+          org.opencontainers.image.description="${{ steps.version.outputs.description }}"
+          org.opencontainers.image.licenses=${{ steps.version.outputs.license }}

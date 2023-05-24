@@ -4,11 +4,48 @@ A GitHub action to build and push image to [Docker Hub](https://hub.docker.com) 
 
 For stable releases, four tags are pushed: `X.X.X`, `X.X`, `X`, and `latest`; for pre-releases, two tags are pushed: the project version and `edge`.
 
-If variant name is specified, a `variant-` prefix is added for tags, while tag `latest` is replaced with variant name. For example, if variant name is `kelly` and version is `1.2.3`, then tags are `kelly-1.2.3`, `kelly-1.2`, `kelly-1`, and `kelly`. Or if version is `1.2.3-alpha.1` then `kelly-1.2.3-alpha.1` and `kelly-edge`.
+## How is Tag Generated?
+
+For stable release, four tags will be added:
+
+- `latest`
+- `X`
+- `X.Y`
+- `X.Y.Z`
+
+For pre-release, two tags will be added:
+
+- `edge`
+- entire version (without prefix), for example `1.0.0-alpha.1`
+
+If the image has the variant name, replace `latest` to variant name, and add variant name as prefix to others. For example if variant name is `myvar`, then following tags are added:
+
+- `myvar` (stable release only)
+- `myvar-edge` (pre-release only)
+- `myvar-1` (stable release only)
+- `myvar-1.0` (stable release only)
+- `myvar-1.0.0` (stable release only)
+- `myvar-1.0.0-alpha.1` (pre-release only)
 
 ## Prerequisites
 
-- Dockerfile is placed at repository root location.
+- Build context is the repository root (dockerfile is placed at the repository root).
+- A package.json file is at the repository root.
+- Project version is stated in the package.json.
+  - Image tag will be determined by the version.
+  - The version can have an optional `v` prefix.
+  - The version must be a SemVer.
+  - Example values:
+    - `1.0.0`
+    - `v1.0.0`
+    - `1.0.0-alpha.1`
+    - `v1.0.0-alpha.1`
+- If the project has an author, it is stated in the package.json.
+  - The author field will be copied to image label.
+- If the project has a license, it is stated in the package.json.
+  - The license name will be placed at image label.
+- If the project has a description, it is stated in the package.json.
+  - The description field will be copied to image label.
 
 ## Usage
 
@@ -24,7 +61,7 @@ jobs:
         uses: actions/checkout@v3
       - name: Build project
         run: yarn install --frozen-lockfile && yarn build
-      - uses: wdzeng/image@v2
+      - uses: wdzeng/image@v3
         with:
           dockerhub-username: your-dockerhub-username
           dockerhub-password: ${{ secrets.DOCKERHUB_TOKEN }}
@@ -34,17 +71,15 @@ jobs:
 
 Unless otherwise noted with a default value, each input is required.
 
-- `github-token`: token used to push image onto ghcr; required only if the repository has no write permission to ghcr.
-- `dockerhub-username`: dockerhub username; optional if you are not pushing to dockerhub; default to github username
-- `dockerhub-password`: dockerhub token; optional if you are not pushing to dockerhub
 - `image`: image name; default to repository name
+- `github-token`: token used to push image onto ghcr; required only if the repository has no write permission to ghcr.
+- `dockerhub-username`: dockerhub username; required only when pushing to dockerhub; default to github username
+- `dockerhub-password`: dockerhub token; required only when pushing to dockerhub
 - `variant`: image variant; default to none
-- `dockerhub`: whether to push image to Docker Hub; default to true
-- `init`: whether to setup QEMU and buildx; set to false if this is not the first time the action is used; default to true
+- `dockerhub`: whether to push image to Docker Hub; default to `true`
+- `init`: whether to setup QEMU and buildx; set to `false` if this is not the first time the action is used; default to `true`
 - `platforms`: platforms to build images; default to `linux/amd64,linux/arm64,linux/arm/v7`
 - `build-target`: build target; optional
 - `build-args`: build arguments; one line per argument; optional
-- `repo-description`: repository description which will be added to image labels
-- `repo-license`: repository license which will be added to image labels
 
 You may need to set `github-token` for the first time the image is pushed to ghcr since it is tricky to give write permission to the repository.
