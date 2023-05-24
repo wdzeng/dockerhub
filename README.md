@@ -77,7 +77,6 @@ Unless otherwise noted with a default value, each input is required.
 - `dockerhub-password`: dockerhub token; required only when pushing to dockerhub
 - `variant`: image variant; default to none
 - `dockerhub`: whether to push image to Docker Hub; default to `true`
-- `init`: whether to setup QEMU and buildx; set to `false` if this is not the first time the action is used; default to `true`
 - `platforms`: platforms to build images; default to `linux/amd64,linux/arm64,linux/arm/v7`
 - `build-target`: build target; optional
 - `build-args`: build arguments; one line per argument; optional
