@@ -127,7 +127,7 @@ runs:
       id: init
       shell: bash -e {0}
       run: |
-        if [[ -n "$action_wdzeng_image_init" ]]; then
+        if [[ -z "$action_wdzeng_image_init" ]]; then
           echo init=true >> $GITHUB_OUTPUT
         else
           echo init=false >> $GITHUB_OUTPUT
