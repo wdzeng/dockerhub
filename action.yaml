@@ -125,7 +125,7 @@ runs:
         fi
     - name: Check if this is init
       id: init
-      shell: base -e {0}
+      shell: bash -e {0}
       run: |
         if [[ -n "$action_wdzeng_image_init" ]]; then
           echo init=true >> $GITHUB_OUTPUT
