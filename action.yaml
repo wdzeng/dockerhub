@@ -1,0 +1,71 @@
+name: dockerhub
+description: Build image and push to dockerhub
+author: hyperbola
+
+inputs:
+  username:
+    description: dockerhub username
+    required: false
+  password:
+    description: dockerhub API token
+    required: true
+  image:
+    description: name of image
+    required: false
+  latest:
+    description: push latest image
+    required: false
+    default: false
+
+runs:
+  using: composite
+  steps:
+    - name: Checkout
+      uses: actions/checkout@v3
+    - name: Install pnpm and dependencies
+      uses: pnpm/action-setup@v2.2.2
+      with:
+        run_install: true
+    - name: Build project
+      shell: bash -e {0}
+      run: pnpm build
+    - name: Get project version
+      id: version
+      uses: wdzeng/version@v1
+      with:
+        pure: true
+    - name: Determine image names
+      id: tags
+      env:
+        VER: ${{ steps.version.outputs.version }}
+        VER_MIN: ${{ steps.version.outputs.minor }}
+        VER_MAJ: ${{ steps.version.outputs.major }}
+      shell: bash -e {0}
+      run: |
+        USR="${{ inputs.username }}"
+        USR="${USR:-${{ github.repository_owner }}}"
+        echo ::debug::username=$USR
+
+        IMG="${{ inputs.image }}"
+        REPO_NAME=${{ github.repository }}
+        IMG="${IMG:-${REPO_NAME#*/}}"
+        echo ::debug::image=$IMG
+        
+        TAGS="$USR/$IMG:$VER,$USR/$IMG:$VER_MIN,$USR/$IMG:$VER_MAJ"
+        if [[ '${{ inputs.latest }}' == 'true' ]]; then TAGS="$TAGS,$USR/$IMG:latest"; fi
+        echo ::set-output name=tags::$TAGS
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+    - name: Login to DockerHub
+      uses: docker/login-action@v2
+      with:
+        username: ${{ inputs.username }}
+        password: ${{ inputs.password }}
+    - name: Build image and push
+      uses: docker/build-push-action@v3
+      with:
+        context: .
+        push: true
+        tags: ${{ steps.tags.outputs.tags }}
