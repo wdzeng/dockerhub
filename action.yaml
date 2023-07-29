@@ -181,4 +181,4 @@ runs:
           org.opencontainers.image.created="${{ steps.date.outputs.now }}"
           org.opencontainers.image.revision="${{ github.sha }}"
           org.opencontainers.image.description="${{ steps.version.outputs.description }}"
-          org.opencontainers.image.licenses=${{ steps.version.outputs.license }}
+          org.opencontainers.image.licenses="${{ steps.version.outputs.license }}"

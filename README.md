@@ -1,8 +1,10 @@
 # Image Action
 
-A GitHub action to build and push image to [Docker Hub](https://hub.docker.com) and [GitHub Container Registry (ghcr)](https://ghcr.io).
+A GitHub action to build and push image to [Docker Hub](https://hub.docker.com) and [GitHub
+Container Registry (ghcr)](https://ghcr.io).
 
-For stable releases, four tags are pushed: `X.X.X`, `X.X`, `X`, and `latest`; for pre-releases, two tags are pushed: the project version and `edge`.
+For stable releases, four tags are pushed: `X.X.X`, `X.X`, `X`, and `latest`; for pre-releases, two
+tags are pushed: the project version and `edge`.
 
 ## How is Tag Generated?
 
@@ -18,7 +20,8 @@ For pre-release, two tags will be added:
 - `edge`
 - entire version (without prefix), for example `1.0.0-alpha.1`
 
-If the image has the variant name, replace `latest` to variant name, and add variant name as prefix to others. For example if variant name is `myvar`, then following tags are added:
+If the image has the variant name, replace `latest` to variant name, and add variant name as prefix
+to others. For example if variant name is `myvar`, then following tags are added:
 
 - `myvar` (stable release only)
 - `myvar-edge` (pre-release only)
@@ -49,7 +52,8 @@ If the image has the variant name, replace `latest` to variant name, and add var
 
 ## Usage
 
-Following example shows how to build project and build and push images to Docker Hub and GitHub Container Registry.
+Following example shows how to build project and build and push images to Docker Hub and GitHub
+Container Registry.
 
 ```yml
 jobs:
@@ -72,8 +76,10 @@ jobs:
 Unless otherwise noted with a default value, each input is required.
 
 - `image`: image name; default to repository name
-- `github-token`: token used to push image onto ghcr; required only if the repository has no write permission to ghcr.
-- `dockerhub-username`: dockerhub username; required only when pushing to dockerhub; default to github username
+- `github-token`: token used to push image onto ghcr; required only if the repository has no write
+  permission to ghcr.
+- `dockerhub-username`: dockerhub username; required only when pushing to dockerhub; default to
+  github username
 - `dockerhub-password`: dockerhub token; required only when pushing to dockerhub
 - `variant`: image variant; default to none
 - `dockerhub`: whether to push image to Docker Hub; default to `true`
@@ -81,4 +87,5 @@ Unless otherwise noted with a default value, each input is required.
 - `build-target`: build target; optional
 - `build-args`: build arguments; one line per argument; optional
 
-You may need to set `github-token` for the first time the image is pushed to ghcr since it is tricky to give write permission to the repository.
+You may need to set `github-token` for the first time the image is pushed to ghcr since it is tricky
+to give write permission to the repository.
