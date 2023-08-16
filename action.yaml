@@ -36,6 +36,16 @@ inputs:
 runs:
   using: composite
   steps:
+    - name: Initialize
+      id: init
+      shell: bash -e {0}
+      run: |
+        if [[ -z "$action_wdzeng_image_init" ]]; then
+          echo init=true >> $GITHUB_OUTPUT
+        else
+          echo init=false >> $GITHUB_OUTPUT
+        fi
+        echo 'action_wdzeng_image_init=1' >> $GITHUB_ENV
     - name: Get project version
       id: version
       uses: wdzeng/version@v1
@@ -123,19 +133,6 @@ runs:
         else
           echo tags=${{ steps.ghcr-tags.outputs.tags }} >> $GITHUB_OUTPUT
         fi
-    - name: Check if this is init
-      id: init
-      shell: bash -e {0}
-      run: |
-        if [[ -z "$action_wdzeng_image_init" ]]; then
-          echo init=true >> $GITHUB_OUTPUT
-        else
-          echo init=false >> $GITHUB_OUTPUT
-        fi
-    - name: Set init environment variable
-      shell: bash -e {0}
-      run: |
-        echo 'action_wdzeng_image_init=1' >> $GITHUB_ENV
     - name: Set up QEMU
       if: ${{ steps.init.outputs.init == 'true' }}
       uses: docker/setup-qemu-action@v2
